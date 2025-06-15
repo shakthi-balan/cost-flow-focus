@@ -1,24 +1,22 @@
 
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { Transaction } from '@/types/transaction';
-import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ArrowUpCircle, ArrowDownCircle, TrendingUp } from 'lucide-react';
 
 interface TransactionsListProps {
   transactions: Transaction[];
 }
 
 const TransactionsList = ({ transactions }: TransactionsListProps) => {
-  const getTypeColor = (type: Transaction['type']) => {
+  const getTransactionIcon = (type: Transaction['type']) => {
     switch (type) {
       case 'income':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return <ArrowUpCircle className="w-4 h-4 text-green-600" />;
       case 'expense':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return <ArrowDownCircle className="w-4 h-4 text-red-600" />;
       case 'investment':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return <TrendingUp className="w-4 h-4 text-blue-600" />;
     }
   };
 
@@ -30,51 +28,75 @@ const TransactionsList = ({ transactions }: TransactionsListProps) => {
         return 'text-red-600';
       case 'investment':
         return 'text-blue-600';
-      default:
-        return 'text-gray-600';
     }
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: window.innerWidth < 640 ? '2-digit' : 'numeric'
+    });
+  };
+
+  // Sort transactions by date (newest first) and limit to recent ones
+  const sortedTransactions = transactions
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 10);
+
   return (
-    <ScrollArea className="h-[400px]">
-      <div className="space-y-1 p-4">
-        {transactions.map((transaction) => (
-          <div key={transaction.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-3">
-                <Badge className={`${getTypeColor(transaction.type)} capitalize`}>
-                  {transaction.type}
-                </Badge>
-                <div className="flex-1 min-w-0">
+    <ScrollArea className="h-80 md:h-96">
+      <div className="space-y-1 p-2 md:p-4">
+        {sortedTransactions.map((transaction) => (
+          <div
+            key={transaction.id}
+            className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+          >
+            <div className="flex items-center space-x-3 flex-1 min-w-0">
+              {getTransactionIcon(transaction.type)}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
                   <p className="text-sm font-medium text-gray-900 truncate">
                     {transaction.description}
                   </p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <p className="text-xs text-gray-500">
-                      {transaction.category}
-                    </p>
-                    {transaction.subcategory && (
-                      <>
-                        <span className="text-xs text-gray-400">•</span>
-                        <p className="text-xs text-gray-500">
-                          {transaction.subcategory}
-                        </p>
-                      </>
-                    )}
-                  </div>
+                  <Badge 
+                    variant="secondary" 
+                    className={`text-xs capitalize hidden sm:inline-flex ${
+                      transaction.type === 'income' ? 'bg-green-100 text-green-700' :
+                      transaction.type === 'expense' ? 'bg-red-100 text-red-700' :
+                      'bg-blue-100 text-blue-700'
+                    }`}
+                  >
+                    {transaction.type}
+                  </Badge>
+                </div>
+                <div className="flex items-center text-xs text-gray-500 space-x-2">
+                  <span>{transaction.category}</span>
+                  <span>•</span>
+                  <span>{formatDate(transaction.date)}</span>
+                  <span className="sm:hidden">•</span>
+                  <span className="sm:hidden">{transaction.account}</span>
+                </div>
+                <div className="hidden sm:block text-xs text-gray-400 mt-1">
+                  {transaction.account}
                 </div>
               </div>
-              <div className="flex items-center justify-between mt-2">
-                <p className="text-xs text-gray-500">
-                  {format(new Date(transaction.date), 'MMM dd, yyyy')} • {transaction.account}
-                </p>
-                <p className={`text-sm font-semibold ${getAmountColor(transaction.type)}`}>
-                  {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toLocaleString()}
-                </p>
-              </div>
+            </div>
+            <div className="text-right">
+              <p className={`text-sm md:text-base font-semibold ${getAmountColor(transaction.type)}`}>
+                {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toLocaleString()}
+              </p>
             </div>
           </div>
         ))}
+        
+        {sortedTransactions.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <p className="text-sm">No transactions yet</p>
+            <p className="text-xs mt-1">Start by adding your first transaction</p>
+          </div>
+        )}
       </div>
     </ScrollArea>
   );

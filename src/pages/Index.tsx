@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import AuthPage from '@/components/auth/AuthPage';
 import Dashboard from '@/components/dashboard/Dashboard';
@@ -36,13 +35,13 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Dashboard onLogout={handleLogout} />
       
-      {/* Floating Add Button */}
+      {/* Mobile-optimized Floating Add Button */}
       <Button
         onClick={() => setShowAddModal(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 z-50"
+        className="fixed bottom-4 right-4 md:bottom-6 md:right-6 w-12 h-12 md:w-14 md:h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 z-50"
         size="lg"
       >
-        <Plus className="w-6 h-6" />
+        <Plus className="w-5 h-5 md:w-6 md:h-6" />
       </Button>
 
       <AddTransactionModal 
