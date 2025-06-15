@@ -7,6 +7,9 @@ import { LogOut, Download, Calendar, TrendingUp, TrendingDown, DollarSign, Menu 
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import TransactionsList from './TransactionsList';
 import FinancialCharts from './FinancialCharts';
+import DateRangeSelector from './DateRangeSelector';
+import AISummarySection from './AISummarySection';
+import FinanceChatBot from './FinanceChatBot';
 import { exportToCSV } from '@/utils/exportUtils';
 import { mockTransactions } from '@/data/mockData';
 
@@ -15,25 +18,35 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ onLogout }: DashboardProps) => {
-  const [dateRange, setDateRange] = useState('this-month');
+  const [dateRange, setDateRange] = useState({
+    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
+    type: 'month' as 'month' | 'custom'
+  });
+
+  // Filter transactions based on date range
+  const filteredTransactions = mockTransactions.filter(transaction => {
+    const transactionDate = new Date(transaction.date);
+    return transactionDate >= dateRange.start && transactionDate <= dateRange.end;
+  });
 
   // Calculate summary statistics
-  const totalIncome = mockTransactions
+  const totalIncome = filteredTransactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
   
-  const totalExpenses = mockTransactions
+  const totalExpenses = filteredTransactions
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
   
-  const totalInvestments = mockTransactions
+  const totalInvestments = filteredTransactions
     .filter(t => t.type === 'investment')
     .reduce((sum, t) => sum + t.amount, 0);
   
   const netWorth = totalIncome - totalExpenses - totalInvestments;
 
   const handleExport = () => {
-    exportToCSV(mockTransactions, 'expense-tracker-data.csv');
+    exportToCSV(filteredTransactions, 'expense-tracker-data.csv');
   };
 
   const MobileMenu = () => (
@@ -108,111 +121,109 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
 
       <div className="container mx-auto px-4 py-4 md:py-8">
         {/* Mobile-first grid layout */}
-        <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-8">
+        <div className="space-y-6">
           
-          {/* Summary Cards - Full width on mobile, left column on desktop */}
-          <div className="lg:col-span-1 space-y-4 md:space-y-6">
-            {/* Financial Summary Cards - 2x2 grid */}
-            <div className="grid grid-cols-2 gap-3 md:gap-4">
-              <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0">
-                <CardHeader className="pb-2 px-3 md:px-4">
-                  <CardTitle className="text-xs md:text-sm font-medium flex items-center">
-                    <TrendingUp className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-                    <span className="hidden sm:inline">Income</span>
-                    <span className="sm:hidden">Inc</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-3 md:px-4">
-                  <div className="text-lg md:text-2xl font-bold">${totalIncome.toLocaleString()}</div>
-                </CardContent>
-              </Card>
+          {/* Date Range Selector */}
+          <DateRangeSelector onDateRangeChange={setDateRange} />
 
-              <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0">
-                <CardHeader className="pb-2 px-3 md:px-4">
-                  <CardTitle className="text-xs md:text-sm font-medium flex items-center">
-                    <TrendingDown className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-                    <span className="hidden sm:inline">Expenses</span>
-                    <span className="sm:hidden">Exp</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-3 md:px-4">
-                  <div className="text-lg md:text-2xl font-bold">${totalExpenses.toLocaleString()}</div>
-                </CardContent>
-              </Card>
+          {/* Summary Cards and AI Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Summary Cards - 2x2 grid */}
+            <div className="lg:col-span-1 space-y-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
+                <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0">
+                  <CardHeader className="pb-2 px-3 md:px-4">
+                    <CardTitle className="text-xs md:text-sm font-medium flex items-center">
+                      <TrendingUp className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                      <span className="hidden sm:inline">Income</span>
+                      <span className="sm:hidden">Inc</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-3 md:px-4">
+                    <div className="text-lg md:text-2xl font-bold">${totalIncome.toLocaleString()}</div>
+                  </CardContent>
+                </Card>
 
-              <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
-                <CardHeader className="pb-2 px-3 md:px-4">
-                  <CardTitle className="text-xs md:text-sm font-medium flex items-center">
-                    <DollarSign className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-                    <span className="hidden sm:inline">Investments</span>
-                    <span className="sm:hidden">Inv</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-3 md:px-4">
-                  <div className="text-lg md:text-2xl font-bold">${totalInvestments.toLocaleString()}</div>
-                </CardContent>
-              </Card>
+                <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0">
+                  <CardHeader className="pb-2 px-3 md:px-4">
+                    <CardTitle className="text-xs md:text-sm font-medium flex items-center">
+                      <TrendingDown className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                      <span className="hidden sm:inline">Expenses</span>
+                      <span className="sm:hidden">Exp</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-3 md:px-4">
+                    <div className="text-lg md:text-2xl font-bold">${totalExpenses.toLocaleString()}</div>
+                  </CardContent>
+                </Card>
 
-              <Card className={`bg-gradient-to-br ${netWorth >= 0 ? 'from-emerald-500 to-emerald-600' : 'from-orange-500 to-orange-600'} text-white border-0`}>
-                <CardHeader className="pb-2 px-3 md:px-4">
-                  <CardTitle className="text-xs md:text-sm font-medium">
-                    <span className="hidden sm:inline">Net Worth</span>
-                    <span className="sm:hidden">Net</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-3 md:px-4">
-                  <div className="text-lg md:text-2xl font-bold">${netWorth.toLocaleString()}</div>
-                </CardContent>
-              </Card>
+                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
+                  <CardHeader className="pb-2 px-3 md:px-4">
+                    <CardTitle className="text-xs md:text-sm font-medium flex items-center">
+                      <DollarSign className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                      <span className="hidden sm:inline">Investments</span>
+                      <span className="sm:hidden">Inv</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-3 md:px-4">
+                    <div className="text-lg md:text-2xl font-bold">${totalInvestments.toLocaleString()}</div>
+                  </CardContent>
+                </Card>
+
+                <Card className={`bg-gradient-to-br ${netWorth >= 0 ? 'from-emerald-500 to-emerald-600' : 'from-orange-500 to-orange-600'} text-white border-0`}>
+                  <CardHeader className="pb-2 px-3 md:px-4">
+                    <CardTitle className="text-xs md:text-sm font-medium">
+                      <span className="hidden sm:inline">Net Worth</span>
+                      <span className="sm:hidden">Net</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-3 md:px-4">
+                    <div className="text-lg md:text-2xl font-bold">${netWorth.toLocaleString()}</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* AI Summary Section */}
+              <AISummarySection transactions={filteredTransactions} dateRange={dateRange} />
             </div>
 
             {/* Transactions List */}
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+            <Card className="lg:col-span-1 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
               <CardHeader className="px-4 py-3 md:px-6 md:py-4">
                 <CardTitle className="flex items-center justify-between text-sm md:text-base">
                   Recent Transactions
-                  <Badge variant="secondary" className="text-xs">{mockTransactions.length}</Badge>
+                  <Badge variant="secondary" className="text-xs">{filteredTransactions.length}</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <TransactionsList transactions={mockTransactions} />
+                <TransactionsList transactions={filteredTransactions} />
               </CardContent>
             </Card>
+
+            {/* Finance Chat Bot */}
+            <div className="lg:col-span-1">
+              <FinanceChatBot transactions={filteredTransactions} />
+            </div>
           </div>
 
-          {/* Charts Section - Full width on mobile, right columns on desktop */}
-          <div className="lg:col-span-2">
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-              <CardHeader className="px-4 py-3 md:px-6 md:py-4">
-                <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <span className="flex items-center text-sm md:text-base">
-                    <Calendar className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-                    Financial Overview
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {['this-month', 'last-3-months', 'this-year'].map((range) => (
-                      <Button
-                        key={range}
-                        variant={dateRange === range ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setDateRange(range)}
-                        className="text-xs flex-1 sm:flex-none"
-                      >
-                        {range === 'this-month' ? 'This Month' : 
-                         range === 'last-3-months' ? 'Last 3M' : 'This Year'}
-                      </Button>
-                    ))}
-                  </div>
-                </CardTitle>
-                <CardDescription className="text-xs md:text-sm">
-                  Analyze your spending patterns and financial trends
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="px-4 md:px-6">
-                <FinancialCharts transactions={mockTransactions} />
-              </CardContent>
-            </Card>
-          </div>
+          {/* Charts Section */}
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+            <CardHeader className="px-4 py-3 md:px-6 md:py-4">
+              <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <span className="flex items-center text-sm md:text-base">
+                  <Calendar className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                  Financial Overview
+                </span>
+              </CardTitle>
+              <CardDescription className="text-xs md:text-sm">
+                Analyze your spending patterns and financial trends
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-4 md:px-6">
+              <FinancialCharts transactions={filteredTransactions} />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
