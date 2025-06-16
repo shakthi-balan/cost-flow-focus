@@ -10,14 +10,15 @@ import FinancialCharts from './FinancialCharts';
 import DateRangeSelector from './DateRangeSelector';
 import AISummarySection from './AISummarySection';
 import FinanceChatBot from './FinanceChatBot';
+import { useTransactions } from '@/contexts/TransactionsContext';
 import { exportToCSV } from '@/utils/exportUtils';
-import { mockTransactions } from '@/data/mockData';
 
 interface DashboardProps {
   onLogout: () => void;
 }
 
 const Dashboard = ({ onLogout }: DashboardProps) => {
+  const { transactions } = useTransactions();
   const [dateRange, setDateRange] = useState({
     start: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
@@ -25,7 +26,7 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
   });
 
   // Filter transactions based on date range
-  const filteredTransactions = mockTransactions.filter(transaction => {
+  const filteredTransactions = transactions.filter(transaction => {
     const transactionDate = new Date(transaction.date);
     return transactionDate >= dateRange.start && transactionDate <= dateRange.end;
   });

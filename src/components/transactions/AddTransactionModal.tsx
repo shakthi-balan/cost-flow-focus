@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { Transaction } from '@/types/transaction';
 import { categories } from '@/data/categories';
+import { useTransactions } from '@/contexts/TransactionsContext';
 
 interface AddTransactionModalProps {
   open: boolean;
@@ -17,6 +17,7 @@ interface AddTransactionModalProps {
 }
 
 const AddTransactionModal = ({ open, onOpenChange }: AddTransactionModalProps) => {
+  const { addTransaction } = useTransactions();
   const [transactionType, setTransactionType] = useState<Transaction['type']>('expense');
   const [formData, setFormData] = useState({
     amount: '',
@@ -40,17 +41,14 @@ const AddTransactionModal = ({ open, onOpenChange }: AddTransactionModalProps) =
       return;
     }
 
-    // In production, this would save to Supabase
-    const newTransaction: Partial<Transaction> = {
+    // Add the new transaction using context
+    addTransaction({
       ...formData,
       type: transactionType,
       amount: parseFloat(formData.amount),
       date: formData.date,
-      id: Date.now().toString()
-    };
+    });
 
-    console.log('New transaction:', newTransaction);
-    
     toast({
       title: 'Transaction Added',
       description: `${transactionType.charAt(0).toUpperCase() + transactionType.slice(1)} of $${formData.amount} has been recorded.`,
