@@ -35,10 +35,10 @@ export const mockTransactions: Transaction[] = [
   },
   {
     id: '4',
-    type: 'investment',
+    type: 'expense',
     amount: 1000,
     description: 'S&P 500 ETF',
-    category: 'Stocks',
+    category: 'Savings',
     subcategory: 'ETFs',
     account: 'investment',
     date: '2024-01-20'
@@ -85,10 +85,10 @@ export const mockTransactions: Transaction[] = [
   },
   {
     id: '9',
-    type: 'investment',
+    type: 'expense',
     amount: 500,
     description: '401k Contribution',
-    category: 'Retirement',
+    category: 'Savings',
     subcategory: '401k',
     account: 'investment',
     date: '2024-01-15'
